@@ -1,0 +1,32 @@
+OUTPUT_DIR: "./res/dualgan/rdg_pi"
+MODELS:
+  IN_CHANNELS: 3
+  GENERATOR: "UNet"
+  RESIZE_BLOCK: False
+  INTERPOLATION: "bilinear"
+  DEVICE: "cuda"
+  K: 1.0
+DATASETS:
+  SOURCE_PATH: "./datasets/PotsdamIRRG"
+  TARGET_PATH: "./datasets/Vaihingen_dsm"
+  SOURCE_SIZE: 896
+  TARGET_SIZE: 512
+LOSS:
+  ADV: 5
+  CYCLE: 10
+  GP: 1
+  DEPTH: 0.0
+  DEPTH_CYCLE: 0.0
+TRAIN:
+  EPOCH: 0
+  TOTAL_EPOCH: 101
+  BATCH_SIZE: 1
+  LR: 0.0005
+  B1: 0.5
+  B2: 0.999
+  N_CPU: 8
+  N_CRITIC: 5
+  CHECKPOINT: 100
+  DEPTH_LOSS : "berhu"
+
+

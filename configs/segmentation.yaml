@@ -1,0 +1,23 @@
+OUTPUT_DIR: "./res/dualgan"
+
+MODELS:
+  OUT_ADV: False
+  BACKBONE : "DeepLabV3"
+  ENCODER : "resnet34"
+
+TRAIN:
+  TOTAL_EPOCH: 101
+  BATCH_SIZE: 8
+  LR: 0.0002
+
+DATASETS:
+  SOURCE_DATASET_PATH: "./res/dualgan/rdg_pi/data"
+  SOURCE_PART: "all"
+  TARGET_DATASET_PATH: "./datasets/Vaihingen"
+  TARGET_PART: "all"
+  VAL_DATASET_PATH: "./datasets/Vaihingen"
+  VAL_PART: "test"
+  EVL_DATASET_PATH: "./datasets/Vaihingen"
+  EVL_PART: "train"
+  EVL_BATCH: 8
+  EVL_GENERATE: False
