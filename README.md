@@ -2,12 +2,12 @@
 
 Source code of RDG and DRDG. 
 
-RDG: ResiDualGAN: Resize-Residual DualGAN for Cross-Domain Remote Sensing Images Semantic Segmentation. [[paper]](https://arxiv.org/abs/2201.11523)
+RDG: **ResiDualGAN: Resize-Residual DualGAN for Cross-Domain Remote Sensing Images Semantic Segmentation** [[paper]](https://arxiv.org/abs/2201.11523)
 
 By Yang Zhao, Han Gao, Peng Guo, Zihao Sun and Xiuwan Chen
 
 
-DRDG: Depth-Assisted ResiDualGAN for Cross-Domain Aerial Images Semantic Segmentation.  [[paper]](https://arxiv.org/abs/2208.09823)
+DRDG: **Depth-Assisted ResiDualGAN for Cross-Domain Aerial Images Semantic Segmentation**  [[paper]](https://arxiv.org/abs/2208.09823)
 
 By Yang Zhao, Peng Guo, Han Gao, and Xiuwan Chen
 
