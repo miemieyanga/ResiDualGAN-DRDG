@@ -14,7 +14,8 @@ def build_generators(cfg):
         resize_block=cfg.MODELS.RESIZE_BLOCK,
         interpolation=cfg.MODELS.INTERPOLATION,
         k = cfg.MODELS.K,
-        k_grad=cfg.MODELS.K_GRAD
+        k_grad=cfg.MODELS.K_GRAD,
+        post_resize=cfg.MODELS.POST_RESIZE
     )
     # G_AB.generator.k = torch.nn.Parameter(torch.Tensor([float(cfg.MODELS.K)]))
     G_BA = ResizeGenerator(
@@ -24,7 +25,8 @@ def build_generators(cfg):
         resize_block=cfg.MODELS.RESIZE_BLOCK,
         interpolation=cfg.MODELS.INTERPOLATION,
         k = cfg.MODELS.K,
-        k_grad=cfg.MODELS.K_GRAD
+        k_grad=cfg.MODELS.K_GRAD,
+        post_resize=cfg.MODELS.POST_RESIZE
     )
     # G_BA.generator.k = torch.nn.Parameter(torch.Tensor([float(cfg.MODELS.K)]))
     return G_AB, G_BA

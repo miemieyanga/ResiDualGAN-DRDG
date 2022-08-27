@@ -60,8 +60,7 @@ class Generator(nn.Module):
         self.up6 = UNetUp(256, 64)
 
         self.final = nn.Sequential(nn.ConvTranspose2d(128, channels, 4, stride=2, padding=1),nn.Tanh())
-        self.k = torch.nn.Parameter(torch.tensor([1.0]), requires_grad=k_grad)
-        # self.k = k
+        self.k = torch.nn.Parameter(torch.tensor([k]), requires_grad=k_grad)
         
         self.dup1 = UNetUp(512, 512, dropout=0.5)
         self.dup2 = UNetUp(1024, 512, dropout=0.5)
@@ -69,8 +68,6 @@ class Generator(nn.Module):
         self.dup4 = UNetUp(1024, 256)
         self.dup5 = UNetUp(512, 128)
         self.dup6 = UNetUp(256, 64)
-        
-        # self.dfinal = nn.Sequential(nn.ConvTranspose2d(128, 1, 4, stride=2, padding=1))
         self.dfinal = nn.Sequential(nn.ConvTranspose2d(128, 1, 4, stride=2, padding=1), nn.Sigmoid())
 
         
@@ -97,9 +94,9 @@ class Generator(nn.Module):
             du4 = self.up4(du3, d3)
             du5 = self.up5(du4, d2)
             du6 = self.up6(du5, d1)
-            return self.k * self.final(u6) + x, self.dfinal(du6)
+            return self.final(u6) + self.k * x, self.dfinal(du6)
         else:
-            return self.k * self.final(u6) + x
+            return self.final(u6) + self.k * x
 
     
 class LinkNetUp(nn.Module):
@@ -120,16 +117,19 @@ class LinkNetUp(nn.Module):
         return x
     
 class ResizeGenerator(nn.Module):
-    def __init__(self, in_channels, size, generator="UNet", resize_block=True, interpolation="bilinear", k=1.0, residual_blocks=1, k_grad=False):
+    def __init__(self, in_channels, size, generator="UNet", resize_block=False, 
+    interpolation="bilinear", k=1.0, residual_blocks=5, k_grad=False, post_resize=True):
         super(ResizeGenerator, self).__init__()
         self.channels = in_channels
         self.size = size
         self.interpolation = interpolation
+        self.post_resize = post_resize
         
         if generator=="UNet":
             self.generator = Generator(in_channels, k, k_grad=k_grad)
-        elif generator=="UNet_pretrain":
-            self.generator = UNetP(in_channels, k)
+        # TODO: k
+        elif generator=="LinkNet":
+            self.generator = GeneratorLink(in_channels)
         elif generator=="ResNet":
             self.generator = GeneratorResNet(in_channels, residual_blocks)
         else:
@@ -140,20 +140,30 @@ class ResizeGenerator(nn.Module):
         else:
             self.resize_block = None
 
-    def forward(self, x, require_depth=False):
-        if not require_depth:
-            x1 = self.generator.forward(x, require_depth)
-        else:
-            x1, depth = self.generator.forward(x, require_depth)
-
+    def _resize(self,x):
         if self.resize_block:
-            x2 = self.resize_block(x1)
+            x = self.resize_block(x)
         else:
-            x2 = F.interpolate(x1, size=self.size, mode=self.interpolation, recompute_scale_factor=False)
+            x = F.interpolate(x, size=self.size, mode=self.interpolation, recompute_scale_factor=False)
+
+        return x
+        
+    def forward(self, x, require_depth=False):
+        if not self.post_resize:
+            x = self._resize(x)
+
+        if not require_depth:
+            x = self.generator.forward(x, require_depth)
+        else:
+            x, depth = self.generator.forward(x, require_depth)
+
+        if self.post_resize:
+            x = self._resize(x)
 
         if require_depth:
-            return x2, depth
-        return x2
+            return x, depth
+
+        return x
         
         
 class Discriminator(nn.Module):
@@ -201,8 +211,9 @@ class ResidualBlock(nn.Module):
 
 
 class GeneratorResNet(nn.Module):
-    def __init__(self, channels, num_residual_blocks):
+    def __init__(self, channels, num_residual_blocks, k=1.0, k_grad=False):
         super(GeneratorResNet, self).__init__()
+        self.k = torch.nn.Parameter(torch.tensor([k]), requires_grad=k_grad)
 
         # Initial convolution block
         out_features = 64
@@ -244,25 +255,50 @@ class GeneratorResNet(nn.Module):
 
         self.model = nn.Sequential(*model)
 
-
-
     def forward(self, x, require_depth=False):
         if require_depth:
             raise NotImplementedError("resnet for requiring depth")
         return self.model(x) + x
 
-class UNetP(nn.Module):
-    def __init__(self, channels, k):
-            super(UNetP, self).__init__()
-            self.model = smp.Unet(
-                encoder_name="resnet34",  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
-                encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
-                in_channels=channels,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
-                classes=channels,  # model output channels (number of classes in your dataset)
-            )
-            self.k = k
-            
+
+class GeneratorLink(nn.Module):
+    def __init__(self, channels = 3, k=1.0, k_grad=False):
+        super(GeneratorLink, self).__init__()
+        self.k = torch.nn.Parameter(torch.tensor([k]), requires_grad=k_grad)
+        
+        self.down1 = UNetDown(channels, 64, normalize=False)
+        self.down2 = UNetDown(64, 128)
+        self.down3 = UNetDown(128, 256)
+        self.down4 = UNetDown(256, 512, dropout=0.5)
+        self.down5 = UNetDown(512, 512, dropout=0.5)
+        self.down6 = UNetDown(512, 512, dropout=0.5)
+        self.down7 = UNetDown(512, 512, dropout=0.5, normalize=False)
+
+        self.up1 = LinkNetUp(512, 512, dropout=0.5)
+        self.up2 = LinkNetUp(512, 512, dropout=0.5)
+        self.up3 = LinkNetUp(512, 512, dropout=0.5)
+        self.up4 = LinkNetUp(512, 256)
+        self.up5 = LinkNetUp(256, 128)
+        self.up6 = LinkNetUp(128, 64)
+
+        self.final = nn.Sequential(nn.ConvTranspose2d(64, channels, 4, stride=2, padding=1), nn.Tanh())
+
     def forward(self, x, require_depth=False):
         if require_depth:
-            raise NotImplementedError("UNetP for requiring depth")
-        return self.model(x) * self.k + x
+            raise NotImplementedError("linknet for requiring depth")
+            
+        d1 = self.down1(x)     # 64
+        d2 = self.down2(d1)    # 128
+        d3 = self.down3(d2)    # 256
+        d4 = self.down4(d3)    # 512
+        d5 = self.down5(d4)    # 512
+        d6 = self.down6(d5)    # 512
+        d7 = self.down7(d6)    # 512
+        u1 = self.up1(d7) + d6    # 512->512
+        u2 = self.up2(u1) + d5    # 512->512
+        u3 = self.up3(u2) + d4    # 512->512
+        u4 = self.up4(u3) + d3    # 512->256
+        u5 = self.up5(u4) + d2    # 256->128
+        u6 = self.up6(u4) + d1    # 128->64
+
+        return self.final(u6) + self.k * x
