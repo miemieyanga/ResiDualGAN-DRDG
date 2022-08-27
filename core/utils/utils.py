@@ -1,5 +1,3 @@
-import imp
-from turtle import forward
 import numpy as np
 from torch import FloatTensor
 from torch.autograd import Variable

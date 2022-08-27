@@ -1,4 +1,3 @@
-from turtle import shape
 import torch.nn as nn
 import torch
 from .resize_block import ResizeBlock
