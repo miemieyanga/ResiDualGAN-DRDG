@@ -140,7 +140,7 @@ class ResizeGenerator(nn.Module):
             self.resize_block = None
 
     def _resize(self,x):
-        
+
         if self.resize_block:
             x = self.resize_block(x)
 
@@ -220,7 +220,7 @@ class GeneratorResNet(nn.Module):
         out_features = 64
         model = [
             nn.ReflectionPad2d(channels),
-            nn.Conv2d(channels, out_features, 3),
+            nn.Conv2d(channels, out_features, 7),
             nn.InstanceNorm2d(out_features),
             nn.ReLU(inplace=True),
         ]
