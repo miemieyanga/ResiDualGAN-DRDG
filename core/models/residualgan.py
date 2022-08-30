@@ -128,9 +128,9 @@ class ResizeGenerator(nn.Module):
             self.generator = Generator(in_channels, k, k_grad=k_grad)
         # TODO: k
         elif generator=="LinkNet":
-            self.generator = GeneratorLink(in_channels)
+            self.generator = GeneratorLink(in_channels, k, k_grad=k_grad)
         elif generator=="ResNet":
-            self.generator = GeneratorResNet(in_channels, residual_blocks)
+            self.generator = GeneratorResNet(in_channels, residual_blocks, k, k_grad=k_grad)
         else:
             raise NotImplementedError
         
@@ -140,8 +140,10 @@ class ResizeGenerator(nn.Module):
             self.resize_block = None
 
     def _resize(self,x):
+        
         if self.resize_block:
             x = self.resize_block(x)
+
         else:
             x = F.interpolate(x, size=self.size, mode=self.interpolation, recompute_scale_factor=False)
 
@@ -257,7 +259,7 @@ class GeneratorResNet(nn.Module):
     def forward(self, x, require_depth=False):
         if require_depth:
             raise NotImplementedError("resnet for requiring depth")
-        return self.model(x) + x
+        return self.model(x) + self.k * x
 
 
 class GeneratorLink(nn.Module):
