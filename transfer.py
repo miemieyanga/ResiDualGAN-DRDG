@@ -16,7 +16,7 @@ import logging
 from core.configs.default import _C as cfg
 
 
-def transfer(model, data_path, target_size, tar_path, device="cuda:0", batch_size=8):
+def transfer(model, data_path, target_size, tar_path, device="cuda:0", batch_size=8, require_depth=False):
     logger = logging.getLogger("RDG.transfer")
     logger.info("Start transferring")
     transform = transforms.Compose([
@@ -36,13 +36,21 @@ def transfer(model, data_path, target_size, tar_path, device="cuda:0", batch_siz
             logger.info(f"images shape: {img.shape}, labels shape: {lbl.shape}")
             logger.info(f"file name: {file_name}")
             img = img.to(device)
-            res, depth = model(img, require_depth=True)
+
+            if require_depth:
+                res, depth = model(img, require_depth=True)
+            else:
+                res = model(img, require_depth=False)
+
             for j in range(len(img)):
                 img_path = "{}/images/{}".format(tar_path, file_name[j])
                 lbl_path = "{}/labels/{}".format(tar_path, file_name[j])
                 dsm_path = "{}/dsms/{}".format(tar_path, file_name[j])
                 save_image(un_normalize(res[j]), img_path)
-                save_image(un_normalize_depth(depth[j]), dsm_path)
+                
+                if require_depth:
+                    save_image(un_normalize_depth(depth[j]), dsm_path)
+
                 cur_lbl = transforms.ToPILImage()(lbl[j])
                 cur_lbl = cur_lbl.resize((target_size, target_size), Image.NEAREST)
                 cur_lbl.save(lbl_path)
