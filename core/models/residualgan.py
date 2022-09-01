@@ -300,6 +300,6 @@ class GeneratorLink(nn.Module):
         u3 = self.up3(u2) + d4    # 512->512
         u4 = self.up4(u3) + d3    # 512->256
         u5 = self.up5(u4) + d2    # 256->128
-        u6 = self.up6(u4) + d1    # 128->64
+        u6 = self.up6(u5) + d1    # 128->64
 
         return self.final(u6) + self.k * x
