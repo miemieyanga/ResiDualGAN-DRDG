@@ -80,21 +80,27 @@ class DualDataset(D.Dataset):
             a_img = Image.open(a_path)
             b_img = Image.open(b_path)
 
-            if self.transform_imgs:
-                a_img = self.transform_imgs(a_img)
-                b_img = self.transform_imgs(b_img)
-
             try:
                 a_dsm_path = "{}/dsms/{}".format(self.dsa_path, a_file_name)
                 b_dsm_path = "{}/dsms/{}".format(self.dsb_path, b_file_name)
                 a_dsm = Image.open(a_dsm_path)
                 b_dsm = Image.open(b_dsm_path)
-                if self.transform_dsms:
-                    a_dsm = self.transform_dsms(a_dsm)
-                    b_dsm = self.transform_dsms(b_dsm)
+
             except:
                 a_dsm = []
                 b_dsm = []
+
+
+        if self.transform_imgs:
+            a_img = self.transform_imgs(a_img)
+            b_img = self.transform_imgs(b_img)
+
+        if self.transform_dsms:
+            try:
+                a_dsm = self.transform_dsms(a_dsm)
+                b_dsm = self.transform_dsms(b_dsm)
+            except:
+                pass
 
         return a_img, b_img, a_dsm, b_dsm
 
