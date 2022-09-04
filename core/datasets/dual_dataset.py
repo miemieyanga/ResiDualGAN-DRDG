@@ -41,7 +41,7 @@ class DualDataset(D.Dataset):
                     a_dsm_path = "{}/dsms/{}".format(self.dsa_path, a_file_name)
                     a_dsm = np.array(Image.open(a_dsm_path))
                 except:
-                    a_dsm = None
+                    a_dsm = []
 
                 self.a_imgs.append(a_img)
                 self.a_dsms.append(a_dsm)
@@ -54,7 +54,7 @@ class DualDataset(D.Dataset):
                     b_dsm_path = "{}/dsms/{}".format(self.dsb_path, b_file_name)
                     b_dsm = np.array(Image.open(b_dsm_path))
                 except:
-                    b_dsm = None
+                    b_dsm = []
 
                 self.b_imgs.append(b_img)
                 self.b_dsms.append(b_dsm)
@@ -93,8 +93,8 @@ class DualDataset(D.Dataset):
                     a_dsm = self.transform_dsms(a_dsm)
                     b_dsm = self.transform_dsms(b_dsm)
             except:
-                a_dsm = None
-                b_dsm = None
+                a_dsm = []
+                b_dsm = []
 
         return a_img, b_img, a_dsm, b_dsm
 
