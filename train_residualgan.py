@@ -237,9 +237,9 @@ def train(cfg):
                 depth_cyc_avg = update_avg(depth_cycle_loss.item(), depth_cyc_avg, cnt)\
                 if lambda_depth_cycle !=0 else 0
                 
-                state_str = "epoch={}/{}\tbatch={}/{}\tD loss={:.6f}\tG loss={:.6f}\tcycle={:.6f}\tdepth_avg={:.6f}\tdepth_cyc_avg={:.6f}\tETA:{}\n".format(
+                state_str = "epoch={}/{}\tbatch={}/{}\tD loss={:.6f}\tG loss={:.6f}\tcycle={:.6f}\tdepth_avg={:.6f}\tdepth_cyc_avg={:.6f}\tk_AB={:.4f}\tk_BA={:.4f}\tETA:{}\n".format(
                     epoch, cfg.TRAIN.TOTAL_EPOCH, i, len(dataloader), d_loss_avg, g_loss_avg,
-                    cycle_loss_avg, depth_avg, depth_cyc_avg, time_left
+                    cycle_loss_avg, depth_avg, depth_cyc_avg, G_AB.generator.k.item(), G_BA.generator.k.item(), time_left
                 )
                 logger.debug(state_str)
             batches_done += 1

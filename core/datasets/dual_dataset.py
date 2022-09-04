@@ -35,17 +35,27 @@ class DualDataset(D.Dataset):
         if in_memory:
             for a_file_name in self.a_files:
                 a_path = "{}/images/{}".format(self.dsa_path, a_file_name)
-                a_dsm_path = "{}/dsms/{}".format(self.dsa_path, a_file_name)
                 a_img = np.array(Image.open(a_path))
-                a_dsm = np.array(Image.open(a_dsm_path))
+
+                try:
+                    a_dsm_path = "{}/dsms/{}".format(self.dsa_path, a_file_name)
+                    a_dsm = np.array(Image.open(a_dsm_path))
+                except:
+                    a_dsm = None
+
                 self.a_imgs.append(a_img)
                 self.a_dsms.append(a_dsm)
             
             for b_file_name in self.b_files:
                 b_path = "{}/images/{}".format(self.dsb_path, b_file_name)
-                b_dsm_path = "{}/dsms/{}".format(self.dsb_path, b_file_name)
                 b_img = np.array(Image.open(b_path))
-                b_dsm = np.array(Image.open(b_dsm_path))
+
+                try:
+                    b_dsm_path = "{}/dsms/{}".format(self.dsb_path, b_file_name)
+                    b_dsm = np.array(Image.open(b_dsm_path))
+                except:
+                    b_dsm = None
+
                 self.b_imgs.append(b_img)
                 self.b_dsms.append(b_dsm)
             
@@ -66,20 +76,25 @@ class DualDataset(D.Dataset):
 
             a_path = "{}/images/{}".format(self.dsa_path, a_file_name)
             b_path = "{}/images/{}".format(self.dsb_path, b_file_name)
-            a_dsm_path = "{}/dsms/{}".format(self.dsa_path, a_file_name)
-            b_dsm_path = "{}/dsms/{}".format(self.dsb_path, b_file_name)
+
             a_img = Image.open(a_path)
             b_img = Image.open(b_path)
-            a_dsm = Image.open(a_dsm_path)
-            b_dsm = Image.open(b_dsm_path)
 
-        if self.transform_imgs:
-            a_img = self.transform_imgs(a_img)
-            b_img = self.transform_imgs(b_img)
-        if self.transform_dsms:
-            a_dsm = self.transform_dsms(a_dsm)
-            b_dsm = self.transform_dsms(b_dsm)
-            
+            if self.transform_imgs:
+                a_img = self.transform_imgs(a_img)
+                b_img = self.transform_imgs(b_img)
+
+            try:
+                a_dsm_path = "{}/dsms/{}".format(self.dsa_path, a_file_name)
+                b_dsm_path = "{}/dsms/{}".format(self.dsb_path, b_file_name)
+                a_dsm = Image.open(a_dsm_path)
+                b_dsm = Image.open(b_dsm_path)
+                if self.transform_dsms:
+                    a_dsm = self.transform_dsms(a_dsm)
+                    b_dsm = self.transform_dsms(b_dsm)
+            except:
+                a_dsm = None
+                b_dsm = None
 
         return a_img, b_img, a_dsm, b_dsm
 
