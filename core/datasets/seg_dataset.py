@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 
 
 class SegDataset(D.Dataset):
-    def __init__(self, path, all=False, train=True, transform=None, iter_len=None, in_memory=True) -> None:
+    def __init__(self, path, all=False, train=True, transform=None, iter_len=None, in_memory=True, get_label=True) -> None:
         super().__init__()
         
         self.path = path
@@ -16,6 +16,7 @@ class SegDataset(D.Dataset):
         self.transform = transform
         self.iter_len = iter_len
         self.in_memory = in_memory
+        self.get_label = get_label
         
         if not all:
             file_path = f"{self.path}/train.txt" if train else f"{self.path}/test.txt"
@@ -33,7 +34,7 @@ class SegDataset(D.Dataset):
                 img_path = "{}/images/{}".format(self.path, file_name)
                 lbl_path = "{}/labels/{}".format(self.path, file_name)
                 img = np.array(Image.open(img_path))
-                lbl = np.array(Image.open(lbl_path))
+                lbl = np.array(Image.open(lbl_path)) if self.get_label else None
                 self.items.append((file_name, img, lbl))
 
         if self.iter_len is None:
@@ -82,18 +83,25 @@ class SegDataset(D.Dataset):
             img_path = "{}/images/{}".format(self.path, file_name)
             lbl_path = "{}/labels/{}".format(self.path, file_name)
             img = np.array(Image.open(img_path))
-            lbl = np.array(Image.open(lbl_path))
-            
-        for item in self.label2train:
-            lbl[lbl == item[0]] = item[1]
+            lbl = np.array(Image.open(lbl_path)) if self.get_label else None
+
+        if self.get_label:    
+            for item in self.label2train:
+                lbl[lbl == item[0]] = item[1]
+
         if self.transform is not None:
-            trans = self.transform(image=img, mask=lbl)
-            img = trans["image"]
-            lbl = trans["mask"]
+            if self.get_label:    
+                trans = self.transform(image=img, mask=lbl)
+                img = trans["image"]
+                lbl = trans["mask"].squeeze()
+            else:
+                trans = self.transform(image=img)
+                img = trans["image"]
 
         if not self.get_file_name:
-            return transforms.ToTensor()(img).float(), lbl.squeeze()
-        return file_name, transforms.ToTensor()(img).float(), lbl.squeeze()
+            return transforms.ToTensor()(img).float(), lbl
+
+        return file_name, transforms.ToTensor()(img).float(), lbl
         
         
     def __len__(self):

@@ -59,7 +59,7 @@ def train(cfg):
     val_dataloader = DataLoader(val_ds, batch_size=cfg.TRAIN.BATCH_SIZE, num_workers=cfg.TRAIN.N_CPU, shuffle=True)
     
     _all, _train = _data_part(cfg.DATASETS.TARGET_PART)
-    target_ds = SegDataset(cfg.DATASETS.TARGET_DATASET_PATH, all=_all, train=_train, transform=trans, iter_len=len(ds))
+    target_ds = SegDataset(cfg.DATASETS.TARGET_DATASET_PATH, all=_all, train=_train, transform=trans, iter_len=len(ds), get_label=False)
     target_dataloader = DataLoader(target_ds, batch_size=cfg.TRAIN.BATCH_SIZE, num_workers=cfg.TRAIN.N_CPU, shuffle=True)
 
     source_label = 0
