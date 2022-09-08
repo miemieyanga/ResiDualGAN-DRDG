@@ -34,7 +34,7 @@ class SegDataset(D.Dataset):
                 img_path = "{}/images/{}".format(self.path, file_name)
                 lbl_path = "{}/labels/{}".format(self.path, file_name)
                 img = np.array(Image.open(img_path))
-                lbl = np.array(Image.open(lbl_path)) if self.get_label else None
+                lbl = np.array(Image.open(lbl_path)) if self.get_label else 0
                 self.items.append((file_name, img, lbl))
 
         if self.iter_len is None:
@@ -83,7 +83,7 @@ class SegDataset(D.Dataset):
             img_path = "{}/images/{}".format(self.path, file_name)
             lbl_path = "{}/labels/{}".format(self.path, file_name)
             img = np.array(Image.open(img_path))
-            lbl = np.array(Image.open(lbl_path)) if self.get_label else None
+            lbl = np.array(Image.open(lbl_path)) if self.get_label else 0
 
         if self.get_label:    
             for item in self.label2train:
