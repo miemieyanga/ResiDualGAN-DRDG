@@ -4,7 +4,7 @@ Source code of RDG and DRDG.
 
 RDG: **ResiDualGAN: Resize-Residual DualGAN for Cross-Domain Remote Sensing Images Semantic Segmentation** [[paper]](https://arxiv.org/abs/2201.11523)
 
-By Yang Zhao, Han Gao, Peng Guo, Zihao Sun and Xiuwan Chen
+By Yang Zhao, Peng Guo, Zihao Sun, Xiuwan Chen and Han Gao
 
 
 DRDG: **Depth-Assisted ResiDualGAN for Cross-Domain Aerial Images Semantic Segmentation**  [[paper]](https://arxiv.org/abs/2208.09823)
@@ -35,7 +35,7 @@ pip install torch==1.8.1 torchvision==0.9.1 torchaudio==0.8.1 yacs openpyxl matp
 ## Prepare dataset
 We use [Potsdam](https://www.isprs.org/education/benchmarks/UrbanSemLab/2d-sem-label-potsdam.aspx) and [Vaihingen](https://www.isprs.org/education/benchmarks/UrbanSemLab/2d-sem-label-vaihingen.aspx) to train our model. 
 
-Our preprocessed data is available at [Google Drive](https://drive.google.com/file/d/1i_o46ofSsb6hh2Drdx6cyr6EJcOqmSYV/view?usp=sharing). Unzip the file and move all folders to `./datasets` folder. 
+Our preprocessed data is available at [Google Drive](https://drive.google.com/file/d/1i_o46ofSsb6hh2Drdx6cyr6EJcOqmSYV/view?usp=sharing) [Baidu Cloud](https://pan.baidu.com/s/1qNb2KvOawuDvSC8r2Q53rQ?pwd=ovo7)(pwd: ovo7). Unzip the file and move all folders to `./datasets` folder. 
 
 ```
 ├── datasets
