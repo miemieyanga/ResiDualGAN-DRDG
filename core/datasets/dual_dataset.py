@@ -2,6 +2,7 @@ import torch.utils.data as D
 import random
 from PIL import Image
 import numpy as np
+from tqdm import tqdm
 
 
 class DualDataset(D.Dataset):
@@ -33,7 +34,7 @@ class DualDataset(D.Dataset):
         self.a_dsms = []
         self.b_dsms = []
         if in_memory:
-            for a_file_name in self.a_files:
+            for a_file_name in tqdm(self.a_files, desc=f"Loading dataset from {dsa_path}"):
                 a_path = "{}/images/{}".format(self.dsa_path, a_file_name)
                 a_img = np.array(Image.open(a_path))
 
@@ -46,7 +47,7 @@ class DualDataset(D.Dataset):
                 self.a_imgs.append(a_img)
                 self.a_dsms.append(a_dsm)
             
-            for b_file_name in self.b_files:
+            for b_file_name in tqdm(self.b_files, desc=f"Loading dataset from {dsb_path}"):
                 b_path = "{}/images/{}".format(self.dsb_path, b_file_name)
                 b_img = np.array(Image.open(b_path))
 
