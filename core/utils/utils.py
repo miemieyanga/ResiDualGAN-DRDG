@@ -9,6 +9,14 @@ import logging
 import sys
 import os
 import torch.nn as nn
+from datetime import datetime
+from uuid import uuid4
+
+
+def generate_unique_id():
+    cur_time = datetime.now().strftime("%b%-d-%-H:%M-")
+    uid = cur_time + str(uuid4()).split('-')[0]
+    return uid
 
 def get_model(model_type, encoder_name="resnet34", encoder_weights="imagenet", in_channels=3, classes=6):
     model = None

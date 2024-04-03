@@ -8,7 +8,7 @@ import numpy as np
 import math
 import itertools
 import time
-import datetime
+from datetime import timedelta
 import logging
 
 import torch.nn as nn
@@ -23,14 +23,17 @@ import torch.autograd as autograd
 from core.models.residualgan import *
 from core.models.resize_block import ResizeBlock
 from core.models.build import *
-from core.utils.utils import weights_init_normal, UnNormalize, adjust_param, setup_logger, BerHu
+from core.utils.utils import weights_init_normal, UnNormalize, adjust_param, setup_logger, BerHu, generate_unique_id
 from core.utils.data_display import *
 from core.datasets.dual_dataset import DualDataset
 from core.configs.default import _C as cfg
 from transfer import transfer
+import wandb
+from tqdm import tqdm
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1" 
-
+wandb_proj = 'rdg_sweep'
+wandb_entity = 'zy_'
 
 def compute_gradient_penalty(D, real_samples, fake_samples, device):
     """Calculates the gradient penalty loss for WGAN GP"""
@@ -123,11 +126,11 @@ def train(cfg):
     
     batches_done = 0
     prev_time = time.time()
-    for epoch in range(cfg.TRAIN.EPOCH, cfg.TRAIN.TOTAL_EPOCH):
+    for epoch in tqdm(range(cfg.TRAIN.EPOCH, cfg.TRAIN.TOTAL_EPOCH), desc="epoch: "):
         cnt = 0
         g_loss_avg = d_loss_avg = cycle_loss_avg = depth_avg = depth_cyc_avg = 0
         state_str = ""
-        for i, (imgs_a, imgs_b, dsm_a, dsm_b) in enumerate(dataloader):
+        for i, (imgs_a, imgs_b, dsm_a, dsm_b) in tqdm(enumerate(dataloader), desc='batch: '):
             imgs_a = imgs_a.to(device)
             imgs_b = imgs_b.to(device)
             if require_depth:
@@ -218,15 +221,27 @@ def train(cfg):
                 # --------------
                 # Log Progress
                 # --------------
-                if i % 200 == 0:
-                    save_image(un_normalize(imgs_a[0]), f"{save_path}/temp/ori.png")
-                    save_image(un_normalize(fake_B[0].detach()), f"{save_path}/temp/res.png")
-                    save_image(un_normalize(recov_A[0].detach()), f"{save_path}/temp/recov.png")
+                if i % 500 == 0:
+                    wandb.log({f'imgs/{i}': [wandb.Image(un_normalize(imgs_a[0])),
+                                             wandb.Image(un_normalize(fake_B[0].detach())),
+                                             wandb.Image(un_normalize(recov_A[0].detach()))]})
 
                 # Determine approximate time left
                 batches_left = (cfg.TRAIN.TOTAL_EPOCH - cfg.TRAIN.EPOCH) * len(dataloader) - batches_done
-                time_left = datetime.timedelta(seconds=batches_left * (time.time() - prev_time) / cfg.TRAIN.N_CRITIC)
+                time_left = timedelta(seconds=batches_left * (time.time() - prev_time) / cfg.TRAIN.N_CRITIC)
                 prev_time = time.time()
+                cnt += 1
+                
+                result_to_update = {
+                    'loss/G_adv': G_adv.item(),
+                    'loss/G_cycle': G_cycle.item(),
+                }
+                if lambda_depth !=0:
+                    result_to_update.update({'loss/depth_loss': depth_loss.item()})
+                if lambda_depth_cycle !=0:
+                    result_to_update.update({'loss/depth_cycle_loss': depth_cycle_loss.item()})
+                
+                wandb.log(result_to_update)
                 
                 cnt += 1
                 g_loss_avg = update_avg(G_adv.item(), g_loss_avg, cnt)
@@ -280,6 +295,10 @@ def main():
     cfg.merge_from_list(args.opts)
     cfg.freeze()
     
+    cur_id = generate_unique_id()
+    cfg.defrost()
+    cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, cur_id)
+    
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
     logger = setup_logger("RDG", cfg.OUTPUT_DIR)
     logger.info(args)
@@ -288,6 +307,15 @@ def main():
         config_str = "\n" + cf.read()
         logger.info(config_str)
     logger.info("Running with config:\n{}".format(cfg))
+    
+    wandb_dir = os.path.join(cfg.OUTPUT_DIR, 'wandb')
+    try:
+        os.makedirs(wandb_dir)
+        logger.info(f'make dir: {wandb_dir}')
+    except:
+        logger.info(f'{wandb_dir} already exists')
+    wandb.init(project=wandb_proj, entity=wandb_entity, dir=wandb_dir,
+                           reinit=True, name=f'{cfg.LOSS.ADV}-{cfg.LOSS.CYCLE}-{cfg.LOSS.DEPTH}-{cfg.LOSS.DEPTH_CYCLE}')
     
     G_AB, _ = train(cfg)
     transfer(G_AB, f"{cfg.DATASETS.SOURCE_PATH}", cfg.DATASETS.TARGET_SIZE,

@@ -14,6 +14,7 @@ import argparse
 from shutil import copyfile
 import logging
 from core.configs.default import _C as cfg
+from tqdm import tqdm
 
 
 def transfer(model, data_path, target_size, tar_path, device="cuda:0", batch_size=8, require_depth=False):
@@ -32,7 +33,7 @@ def transfer(model, data_path, target_size, tar_path, device="cuda:0", batch_siz
     os.makedirs(f"{tar_path}/labels/", exist_ok=True)
     os.makedirs(f"{tar_path}/dsms/", exist_ok=True)
     with torch.no_grad():
-        for i,(file_name, img, lbl) in enumerate(dataloader):
+        for i,(file_name, img, lbl) in tqdm(enumerate(dataloader), desc='tranfer datasets...'):
             logger.info(f"images shape: {img.shape}, labels shape: {lbl.shape}")
             logger.info(f"file name: {file_name}")
             img = img.to(device)

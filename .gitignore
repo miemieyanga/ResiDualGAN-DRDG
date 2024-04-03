@@ -8,6 +8,7 @@
 *.pyc
 log.txt
 /datasets
+env.py
 
 # Build and Release Folders
 bin-debug/
