@@ -221,7 +221,7 @@ def train(cfg):
                 # --------------
                 # Log Progress
                 # --------------
-                if i % 500 == 0:
+                if i % 1000 == 0:
                     wandb.log({f'imgs/{i}': [wandb.Image(un_normalize(imgs_a[0])),
                                              wandb.Image(un_normalize(fake_B[0].detach())),
                                              wandb.Image(un_normalize(recov_A[0].detach()))]})
@@ -297,7 +297,7 @@ def main():
     
     cur_id = generate_unique_id()
     cfg.defrost()
-    cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, cur_id)
+    # cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, cur_id)
     
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
     logger = setup_logger("RDG", cfg.OUTPUT_DIR)
@@ -314,12 +314,21 @@ def main():
         logger.info(f'make dir: {wandb_dir}')
     except:
         logger.info(f'{wandb_dir} already exists')
-    wandb.init(project=wandb_proj, entity=wandb_entity, dir=wandb_dir,
-                           reinit=True, name=f'{cfg.LOSS.ADV}-{cfg.LOSS.CYCLE}-{cfg.LOSS.DEPTH}-{cfg.LOSS.DEPTH_CYCLE}')
+        
+    if cfg.LOSS.DEPTH == 0 and cfg.LOSS.DEPTH_CYCLE==0:
+        model_type = 'RDG'
+    else:
+         model_type = 'DRDG'
+    src_dataset = cfg.DATASETS.SOURCE_PATH.split('/')[-1]
+    tar_dataset = cfg.DATASETS.TARGET_PATH.split('/')[-1]
+    data_type = f'{src_dataset}_{tar_dataset}'
+    wandb_name = f'{model_type}_{data_type}'
+    wandb.init(project=wandb_proj, entity=wandb_entity, dir=wandb_dir, reinit=True, name=wandb_name)
+     # wandb_name = f'{cfg.LOSS.ADV}-{cfg.LOSS.CYCLE}-{cfg.LOSS.DEPTH}-{cfg.LOSS.DEPTH_CYCLE}'
     
     G_AB, _ = train(cfg)
-    transfer(G_AB, f"{cfg.DATASETS.SOURCE_PATH}", cfg.DATASETS.TARGET_SIZE,
-             cfg.OUTPUT_DIR+"/data", torch.device(cfg.MODELS.DEVICE))
+    transfer(G_AB, f"{cfg.DATASETS.TRANS_SOURCE_PATH}", cfg.DATASETS.TARGET_SIZE,
+             os.path.join(cfg.OUTPUT_DIR, 'data', model_type, data_type), torch.device(cfg.MODELS.DEVICE))
     
     
 if __name__ == "__main__":
